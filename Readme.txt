@@ -171,15 +171,12 @@ Detalhes:
       raw_id_fields = ('author',)
       date_hierarchy ='publish'
       ordering = ('status','publish')
-      
+
 
 - QuerySets e gerenciadores (managers)
 
-
 - Criação de views, templates e urls
 
-
 - Adição de paginação e views com lista
-
 
 - Uso de views baseadas em classe de Django
