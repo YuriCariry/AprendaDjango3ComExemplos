@@ -99,8 +99,43 @@ Detalhes:
       testes.py (é o local para adicionar os testes para a aplicação.)
       views.py (a lógica da aplicação deve estar nesse arquivo. cada view recebe uma requisição http, processa essa requisição e devolve uma resposta.)
 
-- Design de Modelos e geração de migrações para os modelos
+- Design de Modelos(esquema de dados) e geração de migrações para os modelos
+  1. Definir os modelos de dados.
+    Os modelos são classes python, subclasses de django.db.model.Model
+    Cada atributo representa um campo do banco de dados.
+    Django criará uma tabela para cada modelo definido no models.py
+    Ao criar um modelo, django criará uma api para consultar os objetos no banco de dados.
+    Exemplo: Arquivo models.py da aplicação blog. (é o modelo de dados para postagens do blog.)
+    obs.: campo slug:
+                    - tem o propósito de ser utilizado para compor urls elegantes
+                    - slug é um pequeno rótulo, contém apenas letras, números, _ ou hífens.
+                    - convenientes para SEO (otimização de pesquisa do google)
+    tipos de campos, estão em https://docs.djangoproject.com/en/3.0/models/fields
+  2. Ativando a aplicação
+      Para que o django mantenha o controle da aplicação e seja capaz de criar as tabelas de banco de dados para seus modelos.
+      Abra o arquivo settings.py e acrescente no parâmetro INSTALLED_APPS:
+        blog.apps.BlogConfig
+        (é a configuração de sua aplicação.)
+  3. Criando e aplicando Migrações
+    Primeiro, deve-se criar uma migração inicial para o seu modelo Post.
+    No diretório raiz do projeto execute:
+      python manage.py makemigrations blog
+      (criará o arquivo 0001_initial_py no diretório migrations da aplicação blog.)
+    Uma migração especifica as dependências de outras migrações e as operações a serem executadas no banco de dados para sincronizá-lo com as alterações do modelo.
 
+    Para analizar o código sql que o django e xecutará no bd a fim de criar a tabela para seu modelo.
+    Execute (não é necessário, apenas para entendimento.):
+      python manage.py sqlmigrate blog 0001
+    obs. django gera os nomes das tabelas combinando o nome da aplicação e o nome do modelo. Ex: blog_post (é possível alterar, na classe Meta do modelo, usando o atributo db_table)
+    obs. django cria uma chave primária automatimente para cada modelo, mas pode sobrescrever especificando primary_key=true emm um dos campos do modelo.
+
+    Para sincronizar o banco de dados com o novo modelo, executar o comando abaixo para aplicar as migrações existentes.
+      python manage.py migrate
+
+    obs. se editar models.py e adicionar, remover ou modificar os campos dos modelos existentes, ou se adicionar um novo modelo, será necessário criar outra migração através do comando:
+      python manage.py makemigrations blog
+    E, em seguida, deve aplicá-la com o comando migrate.
+      python manage.py migrate
 
 - Criação de um site de administração para os modelos
 
