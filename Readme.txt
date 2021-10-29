@@ -138,7 +138,40 @@ Detalhes:
       python manage.py migrate
 
 - Criação de um site de administração para os modelos
+  Para gerenciar as postagens de blog.
+  django disponibiliza uma interface de administração pronta.
+  é possível configurar o modo como queremos que osmodelos sejam exibidos.
+    django.contrib.admin (já está contida em INSTALLED_APPS).
 
+    Criando um superusuário: (é necessário criar um usuário para gerenciar o site de administração)
+      python manage.py createsuperuser
+        username:admin
+        email: admin@admin.comm
+        password: **
+        password(again): **
+   Exemplo:
+    (my_env) C:\Users\yuric\workspace\my_env\mysite>python manage.py createsuperuser
+  Site de administração django (após iniciar o servidor:   python manage.py runserver)
+    http://127.0.0.1:8000/admin
+  Após login (admin admin), serão exibidos: groups e users (fazem parte do framework de autenticação(django.contrib.auth)).
+  Adicionando modelos no site de administração:
+    - Adicionar os modelos do blog no site de administração.
+      Altere o arquivo admin.py da aplicação blog.
+        from django.contrib import admin
+        from .models import Post
+
+  Personalizando o modo como os modelos são exibidos.
+    Editar o arquivo admin.py da aplicação blog
+    @admin.register(Post)
+    class PostAdmin(admin.ModelAdmin):
+      list_display = ('title','slug','author','publish','status')
+      list_filter = ('status','created','publish','author')
+      search_fields = ('title','body')
+      prepopulated_fields = {'slug': ('title',)}
+      raw_id_fields = ('author',)
+      date_hierarchy ='publish'
+      ordering = ('status','publish')
+      
 
 - QuerySets e gerenciadores (managers)
 
