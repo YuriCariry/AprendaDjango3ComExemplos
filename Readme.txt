@@ -1,5 +1,8 @@
-Tentando aprender Django,
-livro Aprenda Django3 com Exemplos.
+Tentando aprender Django.
+Livro Aprenda Django3 com Exemplos.
 
-Testando se a branch cap1 foi criada.
-Testando se o commit vai para a branch origin.
+Objetivos:
+1. Criando uma aplicação de Blog
+2. Criando uma Rede Social
+3. Criando uma Loja Online
+4. Criando uma plataforma de Ensino à Distância
