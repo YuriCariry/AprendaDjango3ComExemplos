@@ -86,7 +86,18 @@ Detalhes:
         - Um projeto é o seu site, que contém várias aplicações como blog, wiki ou fórum.
 
 - Criação de uma aplicação Django
-
+  No diretório raiz do projeto, execute:
+    python manage.py startapp blog
+  Esse comando cria a estrutura básica da aplicação:
+    blog/
+      _init_.py
+      admin.py  (é o local onde você registra seus modelos, a fim de incluir no site(opcional) de administração de Django.)
+      apps.py   (inclui a configuração principal da aplicação blog.)
+      migration/ (conterá as migrações de banco de dados para sua aplicação.Permite que o django monitore as mudanças nos modelos e faça a sincronização com o banco de dados.)
+        _init_.py
+      models.py (inclui os modelos de dados da aplicação, toda aplicação tem que ter esse arquivo, mas pode estar vazio.)
+      testes.py (é o local para adicionar os testes para a aplicação.)
+      views.py (a lógica da aplicação deve estar nesse arquivo. cada view recebe uma requisição http, processa essa requisição e devolve uma resposta.)
 
 - Design de Modelos e geração de migrações para os modelos
 
