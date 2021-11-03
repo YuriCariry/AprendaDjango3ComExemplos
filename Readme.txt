@@ -173,6 +173,8 @@ Detalhes:
       ordering = ('status','publish')
 
 
+
+
 - QuerySets e gerenciadores (managers)
 
 - Criação de views, templates e urls
