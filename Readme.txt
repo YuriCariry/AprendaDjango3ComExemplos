@@ -172,7 +172,130 @@ Detalhes:
       date_hierarchy ='publish'
       ordering = ('status','publish')
 
-- QuerySets e gerenciadores (managers)
+
+- QuerySets e gerenciadores (managers) - 03/11/2021
+	É hora de aprender a acessar informações no banco de dados e interagir com ele.
+	Django possui uma API, ORM (Mapeador Objeto-Relacional); pode trabalhar com vários bds ao mesmo tempo, pode programar roteadores de bds para criar esquemas de roteamento personalizados.
+	Obs. Pode definir o banco de dados para o projeto com o parâmetro DATABASES no settings.py do projeto.
+	Após criar os modelos de dados, django disponibilizará automaticamente uma API para interagir com eles. https://docs.djangoproject.com/en/3.0/ref/models/
+	O ORM de django se baseia em QuerySets.
+		- Um QuerySet é um conjunto de queries(consultas) para ler objetos do banco de dados.
+		- Você pode aplicar filtros nos QuerySets para restringir os resultados da consulta com base em determinados parâmetros.
+	Criando objetos
+		python manage.py shell
+		from django.contrib.auth.models import User
+		from blog.models import Post
+		user = User.objects.get(username='admin')
+		post = Post(title='Another post',
+					slug='another-post',
+					body='body post',
+					author=user)
+					post.save()
+		- A ação anterior executa uma instrução SQL INSERT nos bastidores.
+		- Vimos como criar um objeto na memória antes e fazer sua persistência no banco de dados.
+
+		- Abaixo veremos como criar o objeto e fazer a persistência no banco de dados em uma única operação usando o método create().
+		python manage.py shell
+		from django.contrib.auth.models import User
+		from blog.models import Post
+		Post.objects.create(title='one more post',slug='one-more-post',body='post body.',author=user)
+
+	Atualizando objetos
+		- Modifique o título da postagem para algo diferente e salve o objeto novamente.
+			post.title = 'New title'
+			post.save()
+		- Dessa vez, o método save() executa uma instrução SQL UPDATE.
+
+	Lendo objetos
+		- Para ler um único objeto do banco de dados, usamos o método get();
+		- Acessamos esse método usando Post.objects.get()
+		- Todo modelo django tem pelo menos um gerenciador(manager), e o gerenciador default se chama objects.
+		- Um objeto QuerySet é obtido usando o gerenciador de seu modelo.
+		- Para ler todos os objetos de uma tabela, basta usar o método all() no gerenciador de objetos. Ex.:
+			all_posts = Post.objects.all()
+		- É assim que criamos um QuerySet que devolve todos os objetos do banco de dados.
+		- Obs. Esse QuerySet ainda não foi executado.
+		- Os QuerySets de django são preguiçosos(lazy), o que significa que serão avaliados apenas qunado forem forçados a sê-lo.
+		- Esse comportamento faz com que os QuerySets sejam muito eficientes.
+		- Obs. Se, ao invés de atribuir o QuerySet a uma variável, você escrevê-lo diretamente no shell python,
+			   a instrução QuerySet será executada porque você forçará a sua execução para que os resultados sejam exibidos. Ex.:
+				all_posts
+
+	Usando o método filter()
+		- Para filtrar um QuerySet
+		Ex: Obter todas as postagens publicadas em 2021.
+			Post.objects.filter(publish__year=2021)
+		Ex: Obter todas as postagens publicadas em 2021 do autor 'admin'.
+			Post.objects.filter(publish__year=2021, author__username='admin')
+		Esse comando equivale a criar o mesmo QuerySet encadeando vários filtros.
+			Post.objects.filter(publish__year=2021) \
+						.filter(author__username='admin')
+		Obs. Queries com métodos de pesquisa de campos são criados usando dois undescores (ex: publish__year),
+			mas a mesma anotação é usada para acessar campos de modelos relacionados (ex: author__username).
+
+	Usando exclude()
+		- Podemos excluir determinados resultados do QuerySet usando o método exclude() do gerenciador.
+		- Ex: Obter todas as postagens publicadas em 2021 cujos títulos não começem com Why.
+			Post.objects.filter(publish__year=2021) \
+						.exclude(title__startswith='Why')
+
+	Usando order_by()
+		- Podemos ordenar o resultado com base em campos distintos usando o método order_by() do gerenciador.
+		- Ex: Obter todos os objetos ordenados de acordo com title.
+			Post.objects.order_by('title')
+		- Na ordem decrescente, ficaria:
+			Post.objects.order_by('-title')
+
+	Removendo objetos
+		- Pode fazer usando a instância do objeto, usando o método delete(). ex:
+			post = Post.objects.get(id=1)
+			post.delete()
+		- obs: a remoção do objeto causará a remoção de quaisquer relacionamentos dependentes para objetos ForeignKey com on_delete definido como CASCADE.
+
+	Quando os Queries são avaliados
+		- Criar um QuerySet não envolverá nenhuma atividade no banco de dados até que ele seja avaliado.
+		- Os QuerySets em geral devolvem outro QuerySet não avaliado.
+		- Você pode concatenar quantos filtros quiser em um QuerySet, e o banco de dados não será acessado até que o QuerySet seja avaliado.
+		- Quando um QuerySet é avaliado, ele é traduzido para uma query SQL no banco de dados.
+		- Os QuerySets são avaliados nos seguintes casos:
+			- na primeira vez que você iterar por eles;
+			- ao fatiá-los, por exemplo, usando Post.objects.all()[:3] ;
+			- ao serializá-los ou colocá-los em cache;
+			- ao chamar repr() ou len() neles;
+			- ao chamar list() neles, de modo explícito;
+			- ao testá-los em uma instrução, ex: bool(), or, and ou if.
+
+	Criando gerenciadores de modelo
+		- Podemos definir gerenciadores personalizados para os modelos.
+		- Ex: Gerenciador personalizado para obter todas as postagens cujo status seja 'published'.
+		- Há duas formas:
+			- acrescentar métodos extras em um gerenciador existente;
+				- fornece uma API de QuerySet.
+				- ex: Post.objects.my_manager()
+			- criar outro gerenciador modificado o QuerySet inicial devolvido pelo gerenciador default.
+				- oferece um Post.my_manager.all()
+		- O gerenciador permitirá obter as postagens usando Post.published.all().
+
+		- Modifique models.py da aplicação blog de modo a acrescentar um gerenciador personalizado.
+
+			class PublishedManager(models.Manager):
+				def get_queryset(self):
+					return super(PublishedManager,
+								self).get_queryset()\
+								.filter(status='published')
+			...
+			 # ...
+			objects = models.Manager() # gerenciador default
+			published = PublishedManager() # gerenciador personalizado
+			...
+		- Depois de alterar, deve reiniciar o servidor de desenvolvimento:
+			python manage.py shell
+		- Agora, você pode importar o modelo Post e obter todas as postagens publicadas cujo título começe com 'Who', executando o QuerySet a seguir:
+			python manage.py shell
+			from blog.models import Post
+			Post.published.filter(title__startswith='test')
+		-Obs.: Para testar, o servidor deve estar rodando, e outro cmd deve abrir o shell do python.
+
 
 - Criação de views, templates e urls
 
