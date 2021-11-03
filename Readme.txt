@@ -172,9 +172,6 @@ Detalhes:
       date_hierarchy ='publish'
       ordering = ('status','publish')
 
-
-
-
 - QuerySets e gerenciadores (managers)
 
 - Criação de views, templates e urls
