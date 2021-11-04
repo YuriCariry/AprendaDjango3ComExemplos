@@ -3,9 +3,6 @@ Livro Aprenda Django3 com Exemplos.
 
 Objetivos:
 1. Criando uma aplicação de Blog
-2. Criando uma Rede Social
-3. Criando uma Loja Online
-4. Criando uma plataforma de Ensino à Distância
 
 Cap1. Blog
 - Instalação do Django
@@ -296,8 +293,207 @@ Detalhes:
 			Post.published.filter(title__startswith='test')
 		-Obs.: Para testar, o servidor deve estar rodando, e outro cmd deve abrir o shell do python.
 
-
 - Criação de views, templates e urls
+    - Implementando as views de lista e de Detalhes
+      - Uma view é uma função python que recebe uma requisição web e devolve uma resposta.
+      - Toda a lógica para devolver a resposta desejada estará na view.
+      1. Criar as views da aplicação.
+      2. Definir um padrão de URL para cada view.
+      3. Criar templates html para renderizar os dados gerados pelas views.
+          - cada view renderizará um template, passando variáveis para ele,
+            e devolverá uma resposta http com uma saída renderizada.
+
+    - 1. Criando as views de lista e de detalhes
+      - altere views.py da aplicação blog (view para exibir uma lista de postagens)
+          from django.shortcuts import render, get_object_or_404
+          from .models import Port
+
+          # Create your views here.
+          # Uma view é uma função python que recebe uma requisição web e devolve uma resposta.
+          def post_list(request):
+              post = Post.published.all()
+              return render(request,
+                            'blog/post/list.html',
+                            {'posts':posts})
+      - from django.shortcuts import render, get_object_or_404
+      from .models import Port
+
+      # Create your views here.
+      # Uma view é uma função python que recebe uma requisição web e devolve uma resposta.
+
+      # Recebe o objeto request como único parâmetro.(é necessário a todas as views)
+      # Obtém todas as postagens cujo status seja published,
+      # usando o gerenciador published que criamos em models.py.
+      # Por fim, usamos o atalho render, que renderiza a lista de postagens com o template especificado.
+      #    essa função recebe o objeto request, o path do template e as variáveis de contexto para renderizar o template.
+      #    Ela devolve um objeto HtmlResponse com o texto renderizado (ex: código html)
+      # O atalho render leva o contexto da requisição em consideração,
+      # logo, qualquer variável definida pelos códigos de processamento de contexto do template estarão acessíveis ao template definido.
+      # códigos de processamento de contexto do template  = callable que definem variáveis no contexto.
+      def post_list(request):
+          post = Post.published.all()
+          return render(request,
+                        'blog/post/list.html',
+                        {'posts':posts})
+
+      # View para exibir apenas uma única postagem. (detalhes da postagem)
+      # Recebe os argumentos: year, month, day e post.
+      #    Para obter uma postagem publicada com slug e a data especificados.
+      # Obs. quando criamos o modelo post, adicionamos o parâmetro unique_for_date no campo slug.
+      #      Isso garante que haverá apenas uma postagem com um slug para uma determinada data.
+      #      Desse modo, será possível obter postagens únicas usando o slug e a data.
+      def post_detail(request):
+          post = get_object_or_404(Post, slug=post,
+                                      status='published',
+                                      publish__year=year,
+                                      publish__month=month,
+                                      publish__day=day)
+          return render(request,
+                          'blog/post/detail.html',
+                          {'post':post})
+
+    - 2. Adicionando padrões de URL às suas views  (2. Definir um padrão de URL para cada view.)
+      - Os padrões de URL permitem mapear URLs às views.
+      - É composto de um padrão de string, uma view e, opcionalmente, um nome que permite nomear a URL.
+      - Django:
+          - percorre cada um dos padrões de url e para no primeiro que corresponder ao url requisitado.
+          - importa a view associada ao padrão de url identificado
+          - executa a view, passando uma instância da classe HttpRequest e os argumentos nomeados ou posicionais.
+      - criar arquivo urls.py na aplicação blog e acrescente:
+          from django.urls import path
+          from . import views
+
+          # Definimos o namespace da aplicação.
+          # Permite organizar as urls por aplicação e usar o nome ao referenciá-los.
+          app_name = blog
+
+          # Os padrões de URL permitem mapear URLs às views.
+          # É composto de um padrão de string, uma view e, opcionalmente, um nome que permite nomear a URL.
+          # Definimos dois padrões.
+          # O primeiro padrão de url não recebe nenhum argumento e é mapeado para a view post_list.
+          # O segundo padrão aceita 4 argumentos e é mapeado para a view post_detail.
+          # Sinais de <> para capturar os valores da url.
+          #   O padrão é string, por isso utilizamos conversores de path. ex: <int:year>
+          #   Exemplos de conversores de path. https://docs.djangoproject.com/en/3.0/topics/http/urls/#path-converters
+          # Se o uso do path e dos conversores não for suficiente,
+          #   utilizamos re_path() para definir padrões complexos de url, usando expressões regulares de python.
+          # Obs. Criar um arquivo urls.py para cada aplicação é a melhor maneira de tornar suas aplicações reutilizáveis para outros projetos.
+          urlpatterns = [
+              # views de postagens
+              path('',views.post_list, name='post_list'),
+              path('<int:year>/<int:month>/<int:day>/<slug:post>/',
+                    views.post_detail, name='post_detail'),
+          ]
+
+      - Incluir os padrões de url da aplicação blog nos padrões principais de url do projeto.
+        Editar arquivo urls.py do diretório da aplicação. ex: mysite
+          from django.contrib import admin
+          from django.urls import path, include
+          urlpatterns = [
+              path('admin/', admin.site.urls),
+              path('blog/',include('blogs.urls', namespace='blog')),
+          ]
+
+      - URLs canônicos para os modelos
+        - URL canônico é um url preferencial para um recurso.
+          É possível que haja diferentes páginas em seu site para exibir as postagens,
+          mas haverá um único url que será usado como url principal para uma postagem do blog.
+        - Pela convenção django, um método get_absolute_url() é adicionado no modelo,
+            o qual devolve o URL canônico para o objeto.
+            - o url post_detail pode ser usado para criar o url canônico dos objetos post.
+              - nesse método, usaremos o método reverse(), que permite criar urls com base no nome
+              - e aceita parâmetros opcionais.
+        - Edite o arquivo models.py da aplicação blog. acrescentando:
+        # Você utilizará o get_absolute_url() em seus templates para fazer a ligação com postagens específicas.
+          from django.urls import reverse
+          def get_absolute_url(self):
+              return reverse('blog:post_detail',
+                              args:[self.publish.year,
+                                    self.publish.month,
+                                    self.publish.day,
+                                    self.slug
+                              ])
+
+   -3. Criando templates para suas views (3. Criar templates html para renderizar os dados gerados pelas views.)
+      - Os padrões de url mapeiam urls às views, e as views decidem quais dados são devolvidos ao usuário.
+      - Os templates definem como os dados são exibidos, em geral (em html, junto com a linguagem de template de django).
+      - Adicionar templates a fim de exibir as postagens aos usuários de uma maneira agradável.
+        - crie os diretórios e arquivos a seguir na aplicação blog.
+          templates/
+            blog/
+              base.html        # terá a estrutura html principal do site e dividirá o conteúdo em uma área principal e uma caixa lateral.
+              post/
+                list.html     # herdará da base.html para renderizar as views da lista das postagens do blog.
+                detail.html   # herdará da base.html para renderizar as views de detalhe da postagem do blog.
+
+        - Django tem uma linguagem de template eficaz que permite especificar como os dados serão exibidos.
+          - É baseada em tags de template, variáveis de template e filtros de template.
+            - tags de template       : controlam a renderização do template. ex: {% tag %}
+            - variáveis de template  : são substituídas por valores quando o temlpate é renderizado. ex: {(variable)}
+            - filtros de template    : permitem modificar variáveis a serem exibidas. ex: {{ variable|filter }}
+        - base.html
+              {% load static %}
+              <!DOCTYPE html>
+              <html lang="en" dir="ltr">
+                <head>
+                  <meta charset="utf-8">
+                  <title>{% block title%} {% endblock%}</title>
+                  <link href="{% static "css/blog.css" %}" rel="stylesheet">
+                </head>
+                <body>
+                  <div id="content">
+                    {% block content %}
+                    {% endblock %}
+                  </div>
+                  <div id="sidebar">
+                      <h2>Meu blog</h2>
+                      <p>Esse é o meu blog. </p>
+                  </div>
+                </body>
+              </html>
+
+        - {% load static %}
+            - diz ao django para carregar as tags de template static disponibilizadas pela aplicação django.contrib.staticfiles, está no parâmetro INSTALLED_APPS.
+            - depois, você poderá usar a tag de template {% static %} em qualquer ponto desse template.
+            - pode incluir arquivos estáticos, ex. blog.css
+              - https://github.com/PacktPublishing/Django-3-by-Example/tree/master/Chapter01/mysite/blog/static
+        - Há duas tags {% block %}:
+            - diz ao django que você quer definir um bloco nessa área.
+            - templates que herdarem desse template poderão preencher os blocos com algum conteúdo.
+            - definimos um bloco chamado title e outro chamado content.
+
+        - editar post/list.html
+              {% extends "blog/base.html" %}
+
+              {% block title %}Meu blog.{% endblock %}
+              {%block content %}
+                <h1>Meu Blog.</h1>
+                {% for post in posts %}
+                  <h2>
+                    <a href="{{ post.get_absolute_url }}">
+                      {{ post.title }}
+                    </a>
+                  </h2>
+                  <p class="date">
+                      Published {{ post.publish }} por {{ post.author }}
+                  </p>
+                  {{ post.body|truncatewords:30|linebreaks }}
+                {% endfor %}
+              {% endblock %}
+
+        - editar post/detail.html
+              {% extends "blog/base.html" %}
+
+              {% block title %}{% post.title %} {% endblock %}
+              {%block content %}
+                <h1> {% post.title %} </h1>
+                <p class="date">
+                      Published {{ post.publish }} por {{ post.author }}
+                </p>
+                  {{ post.body|linebreaks }}
+              {% endblock %}
+
+
 
 - Adição de paginação e views com lista
 
