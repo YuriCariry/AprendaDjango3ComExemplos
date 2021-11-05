@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Port
+from .models import Post
 
 # Create your views here.
 # Uma view é uma função python que recebe uma requisição web e devolve uma resposta.
@@ -14,7 +14,7 @@ from .models import Port
 # logo, qualquer variável definida pelos códigos de processamento de contexto do template estarão acessíveis ao template definido.
 # códigos de processamento de contexto do template  = callable que definem variáveis no contexto.
 def post_list(request):
-    post = Post.published.all()
+    posts = Post.published.all()
     return render(request,
                   'blog/post/list.html',
                   {'posts':posts})

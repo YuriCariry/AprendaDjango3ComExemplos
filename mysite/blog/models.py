@@ -38,7 +38,7 @@ class Post(models.Model):
     # Você utilizará o get_absolute_url() em seus templates para fazer a ligação com postagens específicas.
     def get_absolute_url(self):
         return reverse('blog:post_detail',
-                        args:[self.publish.year,
+                        args=[self.publish.year,
                               self.publish.month,
                               self.publish.day,
                               self.slug

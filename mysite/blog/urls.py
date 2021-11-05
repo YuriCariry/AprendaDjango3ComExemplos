@@ -3,7 +3,7 @@ from . import views
 
 # Definimos o namespace da aplicação.
 # Permite organizar as urls por aplicação e usar o nome ao referenciá-los.
-app_name = blog
+app_name = 'blog'
 
 # Os padrões de URL permitem mapear URLs às views.
 # É composto de um padrão de string, uma view e, opcionalmente, um nome que permite nomear a URL.
@@ -15,6 +15,7 @@ app_name = blog
 #   Exemplos de conversores de path. https://docs.djangoproject.com/en/3.0/topics/http/urls/#path-converters
 # Se o uso do path e dos conversores não for suficiente,
 #   utilizamos re_path() para definir padrões complexos de url, usando expressões regulares de python.
+# Obs. Criar um arquivo urls.py para cada aplicação é a melhor maneira de tornar suas aplicações reutilizáveis para outros projetos.
 urlpatterns = [
     # views de postagens
     path('',views.post_list, name='post_list'),
