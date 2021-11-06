@@ -14,6 +14,10 @@ class PublishedManager(models.Manager):
                     .filter(status='published')
 
 class Post(models.Model):
+    # Gerenciadores
+    objects = models.Manager() # gerenciador default
+    published = PublishedManager() # gerenciador personalizado
+
     STATUS_CHOICES = (
         ('draft', 'Draft'),
         ('published','Published'),
@@ -31,11 +35,10 @@ class Post(models.Model):
     status = models.CharField(max_length=10,
                                 choices=STATUS_CHOICES,
                                 default='draft')
-    # ...
-    objects = models.Manager() # gerenciador default
-    published = PublishedManager() # gerenciador personalizado
 
     # Você utilizará o get_absolute_url() em seus templates para fazer a ligação com postagens específicas.
+    # URLs canônicos para os modelos, é o URL preferencial para um recurso.
+    # O método reverse, permite criar URLs com base no nome e aceita parâmetros opcionais.
     def get_absolute_url(self):
         return reverse('blog:post_detail',
                         args=[self.publish.year,
@@ -43,7 +46,6 @@ class Post(models.Model):
                               self.publish.day,
                               self.slug
                         ])
-
 
     class Meta:
         ordering = ('-publish',)

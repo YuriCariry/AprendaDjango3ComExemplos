@@ -195,7 +195,9 @@ Detalhes:
 		python manage.py shell
 		from django.contrib.auth.models import User
 		from blog.models import Post
+		user = User.objects.get(username='admin')
 		Post.objects.create(title='one more post',slug='one-more-post',body='post body.',author=user)
+
 
 	Atualizando objetos
 		- Modifique o título da postagem para algo diferente e salve o objeto novamente.
@@ -495,6 +497,119 @@ Detalhes:
 
 
 
-- Adição de paginação e views com lista
+- Adição de paginação e views com lista - 05/11/2021
+	Ao adicionar conteúdo no blog, centenas de postagens serão armazenadas no banco de dados.
+	Em vez de exibir todas em uma única página, pode dividiar a lista de postagens em várias páginas.
+	Isso pode ser feito com Paginação.
+	Pode definir o número de postagens por página
+	e obter as postagens que correspondam a página solicitada pelo usuário.
+	Django tem uma classe de paginação embutida, que permite gerenciar facilmente os dados nas páginas.
+	Edite o views.py da aplicação blog,
+		de modo a importar as classes de paginação de django;
+		e edite a view post_list.
+	Código:
+		from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+		...
+			def post_list(request):
+				object_list = Post.published.all()
+				paginator = Paginator(object_list, 3) # três postagens em cada página.
+				page = request.GET.get('page')
 
-- Uso de views baseadas em classe de Django
+				try:
+					posts = paginator.page(page)
+				except PageNotAnInteger:         # Se a página não for um inteiro, exibe a primeira
+					posts = paginator.page(1)
+				except EmptyPage:                # Se a página estiver fora do intervalo, exibe a última.
+					posts = paginator.page(paginator.num_pages)
+
+				return render(request,
+							  'blog/post/list.html',
+							  {'page': page, 'posts': posts})
+	Como a paginação funciona:
+		1. Instanciamos a classe Paginator com a quantidade de objetos que queremos exibir em cada página.
+		2. Lemos o parâmetro page de GET, que informa o número da página atual.
+		3. Acessamos os objetos da página desejada chamado o método page() de paginator.
+		4. Passamos o número da página e os objetos obtidos para o template.
+
+	Agora, devemos criar um template para exibir o paginator,
+	de modo que ele possa ser incluído em qualquer template que utilize paginação.
+	Crie o arquivo pagination.html e salve em templates/
+	Código:
+			<div class='pagination'>
+				<span class='step-links'>
+					{% if page.has_previous %}
+						<a href="?page={{ page.previous_page_number }}"> Previous </a>
+					{% endif %}
+					<span class='current'>
+						Page {{ page.number }} of {{ page.paginator.num_pages }}.
+					</span>
+					{% if page.has_next %}
+						<a href="?page={{ page.next_page_number }}"> Next </a>
+					{% endif %}
+				</span>
+			</div>
+
+	O template de paginação espera um objeto Page para renderizar os links para a próxima página e para a anterior,
+	e para exibir a página atual e o total e páginas do resultado.
+	Edite o template blog/post/list.html para incluir o temlplate pagination.html no final do bloco {% content %}
+	Código:
+			...
+		   {% include "pagination.html" with page=posts %}
+		{% endblock %}
+	Como o objeto Page que você está passando para o template se chama posts,
+	deve incluir o template na lista de postagens, passando os parâmetros para renderizá-los.
+
+	Esse método pode ser utilizado para reutilizar o template de paginação nas views paginadas de diferentes modelos.
+	Acesse: http://127.0.0.1:8000/blog/ para verificar a paginação.
+
+
+- Uso de views baseadas em classe de Django - 05/11/2021
+	Views em forma de classe são um modo alternativo de implementar views na forma de objetos Python em vez de funções.
+	Como uma view é um callable que recebe uma requisição web e devolve uma resposta,
+	suas views também podem ser vdefinidas como métodos de classe.
+	Django disponibiliza classes-base de views para isso.
+	Herdam da classe view, que cuida do dispatching de métodos http e de outras funcionalidades comuns.
+	Recursos:
+		- organizam códigos relacionados a métodos http (como get,post ou put) em métodos separados, em vez de usar ramos de condicionais.
+		- usam herança múltipla para criar classes de view reutilizáveis (chamado de mixins).
+
+	Edite a view post_list da aplicação blog,
+	para quie seja uma view baseada em classe a fim de usar ListView genérica oferecida por django. (permite listar objetos de qualquer tipo.)
+	Código:
+		from django.views.generic import ListView
+		# View baseada em classe.
+		# Faz a mesma coisa que a view post_list
+		class PostListView(ListView):
+			queryset = Post.published.all()
+			context_object_name = 'posts'
+			paginate_by = 3
+			template_name = 'blog/post/list.html'
+
+	Dizemos a ListView para fazer:
+		- use um queryset específico em vez de obter todos os objetos. obs. poderia ser feito através de model = Post, e django teria criado o queryset Post.objects.all() genérico para você;
+		- use a variável de contexto posts para os resultados da consulta. obs. caso não especifique, a default seria objects_list
+		- faça a paginação do resultado, exibindo 3 objetos por página;
+		- use um template personalizado para renderizar a página. se não definir, a listView usará blog/post_list.html
+
+	Edite urls.py da aplicação blog, comente o padrão URL post_list e adicione o novo padrão de url utilizando a classe PostListView.
+	Código:
+		urlpatterns = [
+			# views de postagens
+			# path('', views.post_list, name='post_list'),
+			path('', views.PostListView.as_view() , name='post_list'),
+			path('<int:year>/<int:month>/<int:day>/<slug:post>/', views.post_detail, name='post_detail'),
+		]
+	obs. Para manter a paginação funcionando, deve usar o objeto de página correto que é passado para o template.
+	A view genérica ListView passa a página selecionada em uma variável chamada page_obj,
+	logo, deve editar o template post/list.html, a fim de incluir o paginador e usar a variável correta.
+	Código:
+		#{% include "pagination.html" with page=posts %}
+		{% include "pagination.html" with page=page_obj %}
+
+	Acesse: http://127.0.0.1:8000/blog/ para verificar a paginação.
+
+	Resumo: Vimos o básico sobre o framework web django, por meio da criação de uma aplicação simples de blog.
+			Fizemos o design dos modelos de dados e aplicamos migrações ao projeto.
+			Também criamos views, templates e URLs para o blog e incluímos a paginação de objetos.
+			No próximo capítulo, veremos como aprimorar a aplicação de blog com um sistema de comentários e a funcionalidade de marcação com tags,
+			e como permitir que usuários compartilhem postagens por email.
