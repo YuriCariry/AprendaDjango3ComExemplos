@@ -36,4 +36,4 @@ urlpatterns = [
 #                           self.publish.month,
 #                           self.publish.day,
 #                           self.slug
-#                          ])
+#                          ]) 

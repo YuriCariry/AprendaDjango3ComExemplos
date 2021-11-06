@@ -37,5 +37,5 @@ from django.urls import path, include
 # É possível referenciar os urls do blog usando namespace seguido de :nome do url. Ex. blog:post_list e blog:post_detail
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('blog/', include('blog.urls', namespace='blog')),
-]
+    path('blog/',  include('blog.urls', namespace='blog')),
+] 
