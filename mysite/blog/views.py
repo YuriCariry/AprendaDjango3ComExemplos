@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from .models import Post
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 # Create your views here.
 # Uma view é uma função python que recebe uma requisição web e devolve uma resposta.
@@ -13,11 +14,27 @@ from .models import Post
 # O atalho render leva o contexto da requisição em consideração,
 # logo, qualquer variável definida pelos códigos de processamento de contexto do template estarão acessíveis ao template definido.
 # códigos de processamento de contexto do template  = callable que definem variáveis no contexto.
+#def post_list(request):
+#    posts = Post.published.all()
+#    return render(request,
+#                  'blog/post/list.html',
+#                  {'posts' : posts})
+
 def post_list(request):
-    posts = Post.published.all()
+    object_list = Post.published.all()
+    paginator = Paginator(object_list, 3) # três postagens em cada página.
+    page = request.GET.get('page')
+
+    try:
+        posts = paginator.page(page)
+    except PageNotAnInteger:         # Se a página não for um inteiro, exibe a primeira
+        posts = paginator.page(1)
+    except EmptyPage:                # Se a página estiver fora do intervalo, exibe a última.
+        posts = paginator.page(paginator.num_pages)
+
     return render(request,
                   'blog/post/list.html',
-                  {'posts' : posts})
+                  {'page': page, 'posts': posts})
 
 # View para exibir apenas uma única postagem. (detalhes da postagem)
 # Recebe os argumentos: year, month, day e post.

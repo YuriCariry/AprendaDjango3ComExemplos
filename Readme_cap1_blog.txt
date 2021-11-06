@@ -195,7 +195,9 @@ Detalhes:
 		python manage.py shell
 		from django.contrib.auth.models import User
 		from blog.models import Post
+		user = User.objects.get(username='admin')
 		Post.objects.create(title='one more post',slug='one-more-post',body='post body.',author=user)
+
 
 	Atualizando objetos
 		- Modifique o título da postagem para algo diferente e salve o objeto novamente.
@@ -495,6 +497,81 @@ Detalhes:
 
 
 
-- Adição de paginação e views com lista
+- Adição de paginação e views com lista - 05/11/2021
+	Ao adicionar conteúdo no blog, centenas de postagens serão armazenadas no banco de dados.
+	Em vez de exibir todas em uma única página, pode dividiar a lista de postagens em várias páginas.
+	Isso pode ser feito com Paginação.
+	Pode definir o número de postagens por página
+	e obter as postagens que correspondam a página solicitada pelo usuário.
+	Django tem uma classe de paginação embutida, que permite gerenciar facilmente os dados nas páginas.
+	Edite o views.py da aplicação blog,
+		de modo a importar as classes de paginação de django;
+		e edite a view post_list.
+	Código:
+		from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+		...
+			def post_list(request):
+				object_list = Post.published.all()
+				paginator = Paginator(object_list, 3) # três postagens em cada página.
+				page = request.GET.get('page')
+
+				try:
+					posts = paginator.page(page)
+				except PageNotAnInteger:         # Se a página não for um inteiro, exibe a primeira
+					posts = paginator.page(1)
+				except EmptyPage:                # Se a página estiver fora do intervalo, exibe a última.
+					posts = paginator.page(paginator.num_pages)
+
+				return render(request,
+							  'blog/post/list.html',
+							  {'page': page, 'posts': posts})
+	Como a paginação funciona:
+		1. Instanciamos a classe Paginator com a quantidade de objetos que queremos exibir em cada página.
+		2. Lemos o parâmetro page de GET, que informa o número da página atual.
+		3. Acessamos os objetos da página desejada chamado o método page() de paginator.
+		4. Passamos o número da página e os objetos obtidos para o template.
+
+	Agora, devemos criar um template para exibir o paginator,
+	de modo que ele possa ser incluído em qualquer template que utilize paginação.
+	Crie o arquivo pagination.html e salve em templates/
+	Código:
+			<div class='pagination'>
+				<span class='step-links'>
+					{% if page.has_previous %}
+						<a href="?page={{ page.previous_page_number }}"> Previous </a>
+					{% endif %}
+					<span class='current'>
+						Page { page.number } of {{ page.paginator.num_pages }}.
+					</span>
+					{% if page.has_next %}
+						<a href="?page={{ page.next_page_number }}"> Next </a>
+					{% endif %}
+				</span>
+			</div>
+
+	O template de paginação espera um objeto Page para renderizar os links para a próxima página e para a anterior,
+	e para exibir a página atual e o total e páginas do resultado.
+	Edite o template blog/post/list.html para incluir o temlplate pagination.html no final do bloco {% content %}
+	Código:
+			...
+		   {% include "pagination.html" with page=posts %}
+		{% endblock %}
+	Como o objeto Page que você está passando para o template se chama posts,
+	deve incluir o template na lista de postagens, passando os parâmetros para renderizá-los.
+
+	Esse método pode ser utilizado para reutilizar o template de paginação nas views paginadas de diferentes modelos.
+	Acesse: http://127.0.0.1:8000/blog/ para verificar a paginação.
+
+
+
+
+
+
+
+
+
+
+
+
 
 - Uso de views baseadas em classe de Django
