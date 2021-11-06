@@ -17,7 +17,7 @@ def post_list(request):
     posts = Post.published.all()
     return render(request,
                   'blog/post/list.html',
-                  {'posts':posts})
+                  {'posts' : posts})
 
 # View para exibir apenas uma única postagem. (detalhes da postagem)
 # Recebe os argumentos: year, month, day e post.
@@ -25,12 +25,12 @@ def post_list(request):
 # Obs. quando criamos o modelo post, adicionamos o parâmetro unique_for_date no campo slug.
 #      Isso garante que haverá apenas uma postagem com um slug para uma determinada data.
 #      Desse modo, será possível obter postagens únicas usando o slug e a data.
-def post_detail(request):
+def post_detail(request, year, month, day, post):
     post = get_object_or_404(Post, slug=post,
-                                status='published',
-                                publish__year=year,
-                                publish__month=month,
-                                publish__day=day)
+                             status='published',
+                             publish__year=year,
+                             publish__month=month,
+                             publish__day=day)
     return render(request,
-                    'blog/post/detail.html',
-                    {'post':post})
+                  'blog/post/detail.html',
+                  {'post' : post})
