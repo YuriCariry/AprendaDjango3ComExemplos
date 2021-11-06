@@ -7,9 +7,11 @@ app_name = 'blog'
 
 # Os padrões de URL permitem mapear URLs às views.
 # É composto de um padrão de string, uma view e, opcionalmente, um nome que permite nomear a URL.
+
 # Definimos dois padrões.
 # O primeiro padrão de url não recebe nenhum argumento e é mapeado para a view post_list.
 # O segundo padrão aceita 4 argumentos e é mapeado para a view post_detail.
+
 # Sinais de <> para capturar os valores da url.
 #   O padrão é string, por isso utilizamos conversores de path. ex: <int:year>
 #   Exemplos de conversores de path. https://docs.djangoproject.com/en/3.0/topics/http/urls/#path-converters
@@ -22,3 +24,16 @@ urlpatterns = [
     path('<int:year>/<int:month>/<int:day>/<slug:post>/',
           views.post_detail, name='post_detail'),
 ]
+
+# Obs. Temos que incluir os padrões de URL da aplicação blognos padrões principais de URL de projeto.
+#      Devemos editar urls.py do projeto mysite
+# Você utilizará o get_absolute_url() em seus templates para fazer a ligação com postagens específicas.
+# URLs canônicos para os modelos, é o URL preferencial para um recurso.
+# O método reverse, permite criar URLs com base no nome e aceita parâmetros opcionais.
+# def get_absolute_url(self):
+#     return reverse('blog:post_detail',
+#                     args=[self.publish.year,
+#                           self.publish.month,
+#                           self.publish.day,
+#                           self.slug
+#                          ])
