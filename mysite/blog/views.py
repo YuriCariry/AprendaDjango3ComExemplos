@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from .models import Post
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.views.generic import ListView
 
 # Create your views here.
 # Uma view é uma função python que recebe uma requisição web e devolve uma resposta.
@@ -35,6 +36,14 @@ def post_list(request):
     return render(request,
                   'blog/post/list.html',
                   {'page': page, 'posts': posts})
+
+# View baseada em classe.
+# Faz a mesma coisa que a view post_list
+class PostListView(ListView):
+    queryset = Post.published.all()
+    context_object_name = 'posts'
+    paginate_by = 3
+    template_name = 'blog/post/list.html'
 
 # View para exibir apenas uma única postagem. (detalhes da postagem)
 # Recebe os argumentos: year, month, day e post.
