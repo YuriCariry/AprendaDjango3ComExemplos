@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from .models import Post
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.generic import ListView
+from .forms import EmailPostForm
 
 # Create your views here.
 # Uma view é uma função python que recebe uma requisição web e devolve uma resposta.
@@ -60,3 +61,17 @@ def post_detail(request, year, month, day, post):
     return render(request,
                   'blog/post/detail.html',
                   {'post' : post})
+
+def post_share(request, post_id):
+    # Obtém a postagem com base no id
+    post = get_object_or_404(Post, id=post_id, status='published')
+    if request.method == 'POST':
+        # Formulário foi submetido
+        form = EmailPostForm(request.POST)
+        if form.is_valid():
+            # Campos do formulário passaram pela validação
+            cd = form.cleaned_data
+            # ... envia o email
+    else:
+        form = EmailPostForm()
+    return render (request, 'blog/post/share.html', {'post':post, 'form':form})
