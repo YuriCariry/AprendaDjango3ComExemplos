@@ -18,13 +18,14 @@ app_name = 'blog'
 # Se o uso do path e dos conversores não for suficiente,
 #   utilizamos re_path() para definir padrões complexos de url, usando expressões regulares de python.
 # Obs. Criar um arquivo urls.py para cada aplicação é a melhor maneira de tornar suas aplicações reutilizáveis para outros projetos.
-
 urlpatterns = [
-    # views de postagens
-    # path('', views.post_list, name='post_list'),
-    path('', views.PostListView.as_view() , name='post_list'),
-    path('<int:year>/<int:month>/<int:day>/<slug:post>/', views.post_detail, name='post_detail'),
+	# views de postagens
+	# path('', views.post_list, name='post_list'),
+	path('',                                              views.PostListView.as_view(),  name='post_list'),
+	path('<int:year>/<int:month>/<int:day>/<slug:post>/', views.post_detail,             name='post_detail'),
+	path('<int:post_id>/share/',                          views.post_share,              name='post_share'),
 ]
+
 # Obs. Temos que incluir os padrões de URL da aplicação blognos padrões principais de URL de projeto.
 #      Devemos editar urls.py do projeto mysite
 # Você utilizará o get_absolute_url() em seus templates para fazer a ligação com postagens específicas.

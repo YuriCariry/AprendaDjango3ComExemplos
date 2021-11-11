@@ -3,7 +3,7 @@ from .models import Post
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.generic import ListView
 from .forms import EmailPostForm
-
+from django.core,mail import send_mail
 # Create your views here.
 # Uma view é uma função python que recebe uma requisição web e devolve uma resposta.
 
@@ -62,16 +62,33 @@ def post_detail(request, year, month, day, post):
                   'blog/post/detail.html',
                   {'post' : post})
 
+# Definimos a view post_share que recebe o objeto request e a variável post_id como parâmetros
+#	Usamos o atalho get_object_or_404 para obter a postagem com base no id e garantimos que a postagem obtida tenha um status igual a published
+#	Usamos a mesma view para exibir o formulário inicial e para processar os dados submetidos.
+#		Diferencia se o form foi submetido com base no método de request e submetemos o form com POST
+#		Se recebemos uma requisição GET, o form vazio será exibido,
+#		se recebemos uma requisição POST, o form foi submetido e deverá ser processado.
+#	Obs. Se o formulário for válido, obtemos os dados validados acessando form.cleaned_data. É um dicionário dos campos do formulário e seus valores.
+
 def post_share(request, post_id):
-    # Obtém a postagem com base no id
-    post = get_object_or_404(Post, id=post_id, status='published')
-    if request.method == 'POST':
-        # Formulário foi submetido
-        form = EmailPostForm(request.POST)
-        if form.is_valid():
-            # Campos do formulário passaram pela validação
-            cd = form.cleaned_data
-            # ... envia o email
-    else:
-        form = EmailPostForm()
-    return render (request, 'blog/post/share.html', {'post':post, 'form':form})
+	# Obtém a postagem com base no id
+	post = get_object_or_404(Post, id=post_id, status='published')
+	sent = False
+
+	if request.method == 'POST':
+		# Formulário foi submetido
+		form = EmailPostForm(request.POST)
+		if form.is_valid():
+			# Campos do formulário passaram pela validação
+			cd = form.cleaned_data
+			# ... envia o email
+			post_url = request.build_absolute_uri(post.get_absolute_url())
+			subject = f"{cd['name']} recommends you read " \
+					  f"{post.title}"
+			message = f"Read {post.title} at {post_url}\n\n" \
+                      f"{cd['name']}\'s comments: {cd['comments']}"
+			send_mail(subject, message, 'admin@myblog.com', [cd['to']])
+			sent = True
+	else:
+		form = EmailPostForm()
+	return render (request, 'blog/post/share.html', {'post':post, 'form':form, 'sent':sent})

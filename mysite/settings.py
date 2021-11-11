@@ -120,3 +120,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Se não for possível usar um servidor SMTP, pode dizer a django para escrever os emails no console.
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
