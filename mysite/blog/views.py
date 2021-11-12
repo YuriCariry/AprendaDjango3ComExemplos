@@ -1,8 +1,8 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Post
+from .models import Post, Comment
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.generic import ListView
-from .forms import EmailPostForm
+from .forms import EmailPostForm, CommentForm
 from django.core,mail import send_mail
 # Create your views here.
 # Uma view é uma função python que recebe uma requisição web e devolve uma resposta.
@@ -58,9 +58,28 @@ def post_detail(request, year, month, day, post):
                              publish__year=year,
                              publish__month=month,
                              publish__day=day)
+    # Lista dos comentários ativos para esta postagem
+    comments = post.comments.filter(active=True)
+    new_comment = None
+
+    if request.method=='POST':
+        # Um comentário foi postado
+        comment_form = CommentForm(data=request.POST)
+        if comment_form.is_valid():
+            # Cria o objeto Comment, mas ainda não salva no banco de dados.
+            new_comment = comment_form.save(commit=False)
+            # Atribui a postagem atual ao comentário.
+            new_comment.post = post
+            # Salva o comentário no banco de dados.
+            new_comment.save()
+    else:
+        comment_form = CommentForm()
     return render(request,
                   'blog/post/detail.html',
-                  {'post' : post})
+                  {'post' : post,
+                   'comments': comments,
+                   'new_comment': new_comment,
+                   'comment_form': comment_form})
 
 # Definimos a view post_share que recebe o objeto request e a variável post_id como parâmetros
 #	Usamos o atalho get_object_or_404 para obter a postagem com base no id e garantimos que a postagem obtida tenha um status igual a published
